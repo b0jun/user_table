@@ -1,12 +1,22 @@
-import { Button } from 'antd';
+import { Button, Space } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 
 import { StyledHeader, Title } from './recodeHeader.styles';
+import { useRecordActions, useRecordState } from '../context/RecordContext';
 
 export default function RecordHeader() {
+  const { selectedRowKeys } = useRecordState();
+  const { deleteSelectedRecords } = useRecordActions();
   return (
     <StyledHeader>
-      <Title level={5}>회원 목록</Title>
+      <Space size={8}>
+        <Title level={5}>회원 목록</Title>
+        {selectedRowKeys.length > 0 && (
+          <Button danger onClick={deleteSelectedRecords} style={{ marginBottom: 16 }}>
+            선택된 {selectedRowKeys.length}개 삭제
+          </Button>
+        )}
+      </Space>
       <Button type="primary" icon={<PlusOutlined />}>
         추가
       </Button>
