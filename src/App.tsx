@@ -1,4 +1,7 @@
+import { Routes } from './pages/Routes';
+
 function App() {
-  return <div>회원 목록</div>;
+  return <Routes />;
 }
+
 export default App;
