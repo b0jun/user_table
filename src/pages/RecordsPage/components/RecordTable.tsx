@@ -1,8 +1,8 @@
-import { Button, Checkbox } from 'antd';
+import { Checkbox } from 'antd';
 import { FilterDropdownMenu, FilterMenuItem, FilterMenuItemContent, StyledTable } from './recordTable.styles';
 import { useRecordActions, useRecordState } from '../context/RecordContext';
 import { Record } from '../types';
-import { MoreOutlined } from '@ant-design/icons';
+import UpdateDeleteDropdown from './UpdateDeleteDropdown';
 
 export default function RecordTable() {
   const { records, selectedRowKeys } = useRecordState();
@@ -113,8 +113,7 @@ export default function RecordTable() {
     },
     {
       key: 'action',
-      // TODO: 수정, 삭제 추가
-      render: (_: any, record: Record) => <Button type="text" icon={<MoreOutlined />} />,
+      render: (_: any, record: Record) => <UpdateDeleteDropdown record={record} />,
       width: 48,
     },
   ];
