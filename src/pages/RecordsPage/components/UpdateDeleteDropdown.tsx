@@ -2,6 +2,7 @@ import { Button, Dropdown, MenuProps } from 'antd';
 import { MoreOutlined } from '@ant-design/icons';
 import { Record } from '../types';
 import { useRecordActions } from '../context/RecordContext';
+import { useRecordFormModal } from '../hooks/useRecordFormModal';
 
 interface UpdateDeleteDropdownProps {
   record: Record;
@@ -9,6 +10,7 @@ interface UpdateDeleteDropdownProps {
 
 export default function UpdateDeleteDropdown({ record }: UpdateDeleteDropdownProps) {
   const { deleteRecord } = useRecordActions();
+  const { open } = useRecordFormModal();
 
   if (!record) {
     return null;
@@ -18,9 +20,7 @@ export default function UpdateDeleteDropdown({ record }: UpdateDeleteDropdownPro
     {
       key: 'edit',
       label: '수정',
-      onClick: () => {
-        // TODO: 수정
-      },
+      onClick: () => open('edit', record),
     },
     {
       type: 'divider',
