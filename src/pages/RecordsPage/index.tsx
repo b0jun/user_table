@@ -1,3 +1,4 @@
+import { ModalOverlayProvider } from '../../context/ModalOverlayProvider';
 import RecordHeader from './components/RecordHeader';
 import RecordTable from './components/RecordTable';
 import { RecordProvider } from './context/RecordContext';
@@ -5,8 +6,10 @@ import { RecordProvider } from './context/RecordContext';
 export function RecordsPage() {
   return (
     <RecordProvider>
-      <RecordHeader />
-      <RecordTable />
+      <ModalOverlayProvider>
+        <RecordHeader />
+        <RecordTable />
+      </ModalOverlayProvider>
     </RecordProvider>
   );
 }

@@ -3,10 +3,12 @@ import { PlusOutlined } from '@ant-design/icons';
 
 import { StyledHeader, Title } from './recodeHeader.styles';
 import { useRecordActions, useRecordState } from '../context/RecordContext';
+import { useRecordFormModal } from '../hooks/useRecordFormModal';
 
 export default function RecordHeader() {
   const { selectedRowKeys } = useRecordState();
   const { deleteSelectedRecords } = useRecordActions();
+  const { open } = useRecordFormModal();
   return (
     <StyledHeader>
       <Space size={8}>
@@ -17,7 +19,7 @@ export default function RecordHeader() {
           </Button>
         )}
       </Space>
-      <Button type="primary" icon={<PlusOutlined />}>
+      <Button type="primary" icon={<PlusOutlined />} onClick={() => open('add')}>
         추가
       </Button>
     </StyledHeader>

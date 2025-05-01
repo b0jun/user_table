@@ -3,29 +3,37 @@ import styled from 'styled-components';
 import { Record } from '../types';
 
 export const StyledTable = styled(Table)<TableProps<Record>>`
-  && .ant-table-container {
-    border-top: 1px solid #0000000f;
-    border-radius: 0;
-  }
-  && .ant-table-thead .ant-table-cell {
-    padding-left: 8px;
-    padding-top: 8px;
-    padding-bottom: 8px;
-  }
-  && .ant-table-tbody .ant-table-cell {
-    padding: 8px;
-  }
-  && .ant-table-filter-column {
-    display: flex;
-    align-items: center;
-  }
-  && .ant-table-filter-trigger {
-    height: 22px;
-    align-items: center;
-    justify-content: center;
-  }
-  && .ant-table-tbody .ant-table-selection-column {
-    border-right: 1px solid #0000000f;
+  && {
+    .ant-table-container {
+      border-top: 1px solid #0000000f;
+      border-radius: 0;
+    }
+
+    .ant-table-thead .ant-table-cell {
+      padding-left: 8px;
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
+
+    .ant-table-tbody .ant-table-cell {
+      padding: 8px;
+    }
+
+    .ant-table-filter-column {
+      display: flex;
+      align-items: center;
+    }
+
+    .ant-table-filter-trigger {
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ant-table-tbody .ant-table-selection-column {
+      border-right: 1px solid #0000000f;
+    }
   }
 `;
 
