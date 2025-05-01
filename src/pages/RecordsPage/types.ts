@@ -1,17 +1,50 @@
 import { type Dayjs } from 'dayjs';
 
-export type JobType = '개발자' | 'PO' | '디자이너';
+export type FieldType = 'text' | 'textarea' | 'date' | 'select' | 'checkbox';
+
+export type Field =
+  | {
+      key: string;
+      type: 'text' | 'textarea';
+      label: string;
+      required: boolean;
+      max?: number;
+      width?: number;
+    }
+  | {
+      key: string;
+      type: 'date';
+      label: string;
+      required: boolean;
+      width?: number;
+    }
+  | {
+      key: string;
+      type: 'select';
+      label: string;
+      required: boolean;
+      options: string[];
+      width?: number;
+    }
+  | {
+      key: string;
+      type: 'checkbox';
+      label: string;
+      required: boolean;
+      width?: number;
+    };
+
+interface FieldData {
+  [key: string]: string | boolean | null;
+}
+interface FormFieldData {
+  [key: string]: string | boolean | Dayjs | null;
+}
 
 export interface Record {
   id: string;
-  name: string;
-  address: string | null;
-  memo: string | null;
-  joinDate: string | null;
-  job: JobType;
-  emailConsent: boolean;
+  fields: FieldData;
 }
-
-export type RecordFormType = Omit<Record, 'id' | 'joinDate'> & {
-  joinDate: Dayjs | null;
-};
+export interface RecordFormType {
+  fields: FormFieldData;
+}
