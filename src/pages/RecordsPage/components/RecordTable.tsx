@@ -3,6 +3,7 @@ import { FilterDropdownMenu, FilterMenuItem, FilterMenuItemContent, StyledTable 
 import { useRecordActions, useRecordState } from '../context/RecordContext';
 import { Record } from '../types';
 import UpdateDeleteDropdown from './UpdateDeleteDropdown';
+import { type FilterDropdownProps } from 'antd/es/table/interface';
 
 export default function RecordTable() {
   const { records, selectedRowKeys } = useRecordState();
@@ -26,7 +27,11 @@ export default function RecordTable() {
     }));
 
     return {
-      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }: any) => (
+      filterDropdown: ({
+        setSelectedKeys,
+        selectedKeys,
+        confirm,
+      }: Pick<FilterDropdownProps, 'setSelectedKeys' | 'selectedKeys' | 'confirm'>) => (
         <FilterDropdownMenu role="menu">
           {filterOptions.map((option) => (
             <FilterMenuItem
@@ -35,7 +40,7 @@ export default function RecordTable() {
               selected={selectedKeys.includes(option.value)}
               onClick={() => {
                 const newSelectedKeys = selectedKeys.includes(option.value)
-                  ? selectedKeys.filter((key: string) => key !== option.value)
+                  ? selectedKeys.filter((key: React.Key) => key !== option.value)
                   : [...selectedKeys, option.value];
                 setSelectedKeys(newSelectedKeys);
                 confirm({ closeDropdown: false });
@@ -48,7 +53,7 @@ export default function RecordTable() {
                   onChange={(e) => {
                     const newSelectedKeys = e.target.checked
                       ? [...selectedKeys, option.value]
-                      : selectedKeys.filter((key: string) => key !== option.value);
+                      : selectedKeys.filter((key: React.Key) => key !== option.value);
                     setSelectedKeys(newSelectedKeys);
                     confirm({ closeDropdown: false });
                   }}
