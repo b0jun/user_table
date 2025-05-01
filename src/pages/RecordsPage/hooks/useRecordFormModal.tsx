@@ -10,9 +10,12 @@ import {
   StyledSelect,
   RequiredMark,
 } from './recordFormModal.styles';
-import { Record, RecordFormType } from '../types';
+import { Field, RecordFormType, Record } from '../types';
 import { Checkbox, Form, Select } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
+import { defaultFields } from '../lib/data';
+import { Rule } from 'antd/es/form';
+import { generateInitialValues } from '../utils/generateInitialValues';
 
 type FormMode = 'add' | 'edit';
 
@@ -40,34 +43,29 @@ interface RecordFormModalProps {
   record?: Record;
 }
 
-const initialValues = {
-  name: '',
-  address: null,
-  memo: null,
-  joinDate: null,
-  job: '개발자',
-  emailConsent: false,
-};
+const initialValues = generateInitialValues(defaultFields);
 
 function RecordFormModal({ open, close, mode, record }: RecordFormModalProps) {
   const { addRecord, updateRecord } = useRecordActions();
 
   const [form] = Form.useForm<RecordFormType>();
   const values = Form.useWatch([], form);
-  const isEditMode = mode === 'edit' && record;
+  const isEditMode = mode === 'edit';
   const [isFormValid, setIsFormValid] = useState<boolean>(false);
 
   // * Form 초기 설정
   useEffect(() => {
     if (isEditMode && record) {
-      form.setFieldsValue({
-        name: record.name,
-        address: record.address ?? null,
-        memo: record.memo ?? null,
-        joinDate: record.joinDate ? dayjs(record.joinDate) : null,
-        job: record.job,
-        emailConsent: record.emailConsent,
+      const formValues: RecordFormType = { fields: {} };
+      defaultFields.forEach((field) => {
+        const value = record.fields[field.key];
+        if (field.type === 'date' && typeof value === 'string') {
+          formValues.fields[field.key] = dayjs(value);
+        } else {
+          formValues.fields[field.key] = value ?? (field.required ? '' : null);
+        }
       });
+      form.setFieldsValue(formValues);
     } else {
       form.resetFields();
     }
@@ -81,22 +79,31 @@ function RecordFormModal({ open, close, mode, record }: RecordFormModalProps) {
       .catch(() => setIsFormValid(false));
   }, [form, values]);
 
+  const preprocessFormValues = (values: RecordFormType): Omit<Record, 'id'> => {
+    const transformed: Omit<Record, 'id'> = { fields: {} };
+    defaultFields.forEach((field) => {
+      const value = values.fields[field.key];
+      if (field.type === 'date' && value) {
+        transformed.fields[field.key] = (value as Dayjs).format('YYYY-MM-DD');
+      } else if (field.type === 'checkbox') {
+        transformed.fields[field.key] = !!value;
+      } else {
+        transformed.fields[field.key] = (value as string | null) ?? null;
+      }
+    });
+    return transformed;
+  };
+
   const handleFinish = (values: RecordFormType) => {
-    const finalValues = {
-      ...values,
-      joinDate: dayjs(values.joinDate).format('YYYY-MM-DD'),
-      address: values.address || null,
-      memo: values.memo || null,
-    };
+    const newRecord = preprocessFormValues(values);
     if (isEditMode && record) {
-      updateRecord({ ...finalValues, id: record.id });
+      updateRecord({ ...newRecord, id: record.id });
     } else {
-      addRecord(finalValues);
+      addRecord(newRecord);
     }
     form.resetFields();
     close();
   };
-
   // * 오늘 이후 날짜 비활성화
   const disabledDate = (current: Dayjs) => {
     return current && current.isAfter(dayjs(), 'day');
@@ -109,6 +116,31 @@ function RecordFormModal({ open, close, mode, record }: RecordFormModalProps) {
       {required && <span>*</span>}
     </RequiredMark>
   );
+
+  const renderFieldInput = (field: Field) => {
+    switch (field.type) {
+      case 'text':
+        return <StyledInput />;
+      case 'textarea':
+        return <StyledTextArea />;
+      case 'date':
+        return <StyledDatePicker showNow={false} format="YYYY-MM-DD" disabledDate={disabledDate} />;
+      case 'select':
+        return (
+          <StyledSelect>
+            {field.options?.map((option) => (
+              <Option key={option} value={option}>
+                {option}
+              </Option>
+            ))}
+          </StyledSelect>
+        );
+      case 'checkbox':
+        return <Checkbox />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <StyledModal
@@ -133,35 +165,29 @@ function RecordFormModal({ open, close, mode, record }: RecordFormModalProps) {
           initialValues,
         })}
       >
-        <Form.Item
-          name="name"
-          label="이름"
-          rules={[
-            { required: true, message: '이름을 입력하세요.' },
-            { max: 20, message: '글자수 20을 초과할 수 없습니다.' },
-          ]}
-        >
-          <StyledInput />
-        </Form.Item>
-        <Form.Item name="address" label="주소" rules={[{ max: 20, message: '글자수 20을 초과할 수 없습니다.' }]}>
-          <StyledInput />
-        </Form.Item>
-        <Form.Item name="memo" label="메모" rules={[{ max: 50, message: '글자수 50을 초과할 수 없습니다.' }]}>
-          <StyledTextArea />
-        </Form.Item>
-        <Form.Item name="joinDate" label="가입일" rules={[{ required: true, message: '가입일을 선택하세요.' }]}>
-          <StyledDatePicker showNow={false} format="YYYY-MM-DD" disabledDate={disabledDate} />
-        </Form.Item>
-        <Form.Item name="job" label="직업">
-          <StyledSelect>
-            <Option value="개발자">개발자</Option>
-            <Option value="PO">PO</Option>
-            <Option value="디자이너">디자이너</Option>
-          </StyledSelect>
-        </Form.Item>
-        <Form.Item name="emailConsent" label="이메일 수신 동의" valuePropName="checked">
-          <Checkbox />
-        </Form.Item>
+        {defaultFields.map((field) => {
+          const rules: Rule[] = [];
+          if (field.required) {
+            rules.push({ required: true, message: `${field.label}을(를) 입력하세요.` });
+          }
+          if ('max' in field && field.max) {
+            rules.push({
+              max: field.max,
+              message: `글자수 ${field.max} 초과할 수 없습니다.`,
+            });
+          }
+          return (
+            <Form.Item
+              key={field.key}
+              name={['fields', field.key]}
+              label={field.label}
+              rules={rules}
+              valuePropName={field.type === 'checkbox' ? 'checked' : undefined}
+            >
+              {renderFieldInput(field)}
+            </Form.Item>
+          );
+        })}
       </StyledForm>
     </StyledModal>
   );

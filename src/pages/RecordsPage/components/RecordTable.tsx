@@ -1,9 +1,10 @@
 import { Checkbox } from 'antd';
 import { FilterDropdownMenu, FilterMenuItem, FilterMenuItemContent, StyledTable } from './recordTable.styles';
 import { useRecordActions, useRecordState } from '../context/RecordContext';
-import { Record } from '../types';
+import { Record, Field } from '../types';
 import UpdateDeleteDropdown from './UpdateDeleteDropdown';
-import { type FilterDropdownProps } from 'antd/es/table/interface';
+import { type ColumnsType, type FilterDropdownProps } from 'antd/es/table/interface';
+import { defaultFields } from '../lib/data';
 
 export default function RecordTable() {
   const { records, selectedRowKeys } = useRecordState();
@@ -16,13 +17,13 @@ export default function RecordTable() {
     },
   };
 
-  const getColumnFilterProps = (dataIndex: keyof Record, records: Record[]) => {
+  const getColumnFilterProps = (field: Field, records: Record[]) => {
     // * 레코드에서 고유 값 추출
     const uniqueValues = Array.from(
-      new Set(records.map((record) => record[dataIndex]).filter((value) => value !== null)),
+      new Set(records.map((record) => record.fields[field.key]).filter((value) => value !== null)),
     );
     const filterOptions = uniqueValues.map((value) => ({
-      label: typeof value === 'boolean' ? (value ? '선택됨' : '선택 안함') : value,
+      label: field.type === 'checkbox' ? (value ? '선택됨' : '선택 안함') : value,
       value: value.toString(),
     }));
 
@@ -65,63 +66,30 @@ export default function RecordTable() {
         </FilterDropdownMenu>
       ),
       onFilter: (value: React.Key | boolean, record: Record) => {
-        const fieldValue = record[dataIndex];
-        // * Email(boolean)
-        if (typeof fieldValue === 'boolean') {
-          return fieldValue.toString() === value.toString();
+        const fieldValue = record.fields[field.key];
+        if (fieldValue === null) {
+          return false;
         }
-        return fieldValue?.toString() === value.toString();
+        return fieldValue.toString() === value.toString();
       },
     };
   };
 
-  const columns = [
-    {
-      title: '이름',
-      dataIndex: 'name',
-      key: 'name',
-      width: 120,
-      ...getColumnFilterProps('name', records),
-    },
-    {
-      title: '주소',
-      dataIndex: 'address',
-      key: 'address',
-      ...getColumnFilterProps('address', records),
-    },
-    {
-      title: '메모',
-      dataIndex: 'memo',
-      key: 'memo',
-      ...getColumnFilterProps('memo', records),
-    },
-    {
-      title: '가입일',
-      dataIndex: 'joinDate',
-      key: 'joinDate',
-      width: 200,
-      ...getColumnFilterProps('joinDate', records),
-    },
-    {
-      title: '직업',
-      dataIndex: 'job',
-      key: 'job',
-      ...getColumnFilterProps('job', records),
-    },
-    {
-      title: '이메일 수신 동의',
-      dataIndex: 'emailConsent',
-      key: 'emailConsent',
-      render: (value: boolean) => <Checkbox checked={value} />,
-      width: 150,
-      ...getColumnFilterProps('emailConsent', records),
-    },
-    {
-      key: 'action',
-      render: (_: any, record: Record) => <UpdateDeleteDropdown record={record} />,
-      width: 48,
-    },
-  ];
+  const columns: ColumnsType<Record> = defaultFields.map((field: Field) => ({
+    title: field.label,
+    dataIndex: ['fields', field.key],
+    key: field.key,
+    render: (value: string | boolean | null) =>
+      field.type === 'checkbox' ? <Checkbox checked={value as boolean} /> : value,
+    ...(field.width && { width: field.width }), // * width 없는경우 자동배분
+    ...getColumnFilterProps(field, records),
+  }));
+
+  columns.push({
+    key: 'action',
+    render: (_: any, record: Record) => <UpdateDeleteDropdown record={record} />,
+    width: 48,
+  });
 
   return (
     <StyledTable pagination={false} dataSource={records} columns={columns} rowKey="id" rowSelection={rowSelection} />
