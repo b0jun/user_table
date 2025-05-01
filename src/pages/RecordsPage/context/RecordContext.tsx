@@ -14,6 +14,7 @@ interface RecordActions {
   addRecord: (newRecord: Omit<Record, 'id'>) => void;
   deleteRecord: (id: string) => void;
   deleteSelectedRecords: () => void;
+  updateRecord: (values: Record) => void;
 }
 
 const RecordStateContext = createContext<RecordState | undefined>(undefined);
@@ -66,6 +67,15 @@ export function RecordProvider({ children }: RecordProviderProps) {
     setSelectedRowKeys([]);
   }, [selectedRowKeys]);
 
+  // * 레코드 업데이트
+  const updateRecord = useCallback((updatedRecord: Record) => {
+    setRecords((prevRecords) => {
+      const updatedRecords = prevRecords.map((r) => (r.id === updatedRecord.id ? { ...r, ...updatedRecord } : r));
+      storage.save(updatedRecords);
+      return updatedRecords;
+    });
+  }, []);
+
   const state = useMemo(
     () => ({
       records,
@@ -77,12 +87,13 @@ export function RecordProvider({ children }: RecordProviderProps) {
   const actions = useMemo(
     () => ({
       setRecords,
+      setSelectedRowKeys,
       addRecord,
       deleteRecord,
       deleteSelectedRecords,
-      setSelectedRowKeys,
+      updateRecord,
     }),
-    [setRecords, addRecord, deleteRecord, deleteSelectedRecords, setSelectedRowKeys],
+    [setRecords, setSelectedRowKeys, addRecord, deleteRecord, deleteSelectedRecords, updateRecord],
   );
 
   return (

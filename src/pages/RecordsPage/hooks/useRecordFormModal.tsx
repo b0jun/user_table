@@ -49,13 +49,29 @@ const initialValues = {
   emailConsent: false,
 };
 
-// TODO: (mode = 'edit') 로직 추가
 function RecordFormModal({ open, close, mode, record }: RecordFormModalProps) {
-  const { addRecord } = useRecordActions();
+  const { addRecord, updateRecord } = useRecordActions();
 
   const [form] = Form.useForm<RecordFormType>();
   const values = Form.useWatch([], form);
+  const isEditMode = mode === 'edit' && record;
   const [isFormValid, setIsFormValid] = useState<boolean>(false);
+
+  // * Form 초기 설정
+  useEffect(() => {
+    if (isEditMode && record) {
+      form.setFieldsValue({
+        name: record.name,
+        address: record.address ?? null,
+        memo: record.memo ?? null,
+        joinDate: record.joinDate ? dayjs(record.joinDate) : null,
+        job: record.job,
+        emailConsent: record.emailConsent,
+      });
+    } else {
+      form.resetFields();
+    }
+  }, [isEditMode, record, form]);
 
   // * 유효성 체크
   useEffect(() => {
@@ -72,8 +88,11 @@ function RecordFormModal({ open, close, mode, record }: RecordFormModalProps) {
       address: values.address || null,
       memo: values.memo || null,
     };
-    addRecord(finalValues);
-
+    if (isEditMode && record) {
+      updateRecord({ ...finalValues, id: record.id });
+    } else {
+      addRecord(finalValues);
+    }
     form.resetFields();
     close();
   };
@@ -110,13 +129,15 @@ function RecordFormModal({ open, close, mode, record }: RecordFormModalProps) {
         onFinish={handleFinish}
         style={{ marginBottom: 16 }}
         requiredMark={customizeRequiredMark}
-        initialValues={initialValues}
+        {...(!isEditMode && {
+          initialValues,
+        })}
       >
         <Form.Item
           name="name"
           label="이름"
           rules={[
-            { required: true, message: '이름을 입력하세요' },
+            { required: true, message: '이름을 입력하세요.' },
             { max: 20, message: '글자수 20을 초과할 수 없습니다.' },
           ]}
         >
@@ -128,7 +149,7 @@ function RecordFormModal({ open, close, mode, record }: RecordFormModalProps) {
         <Form.Item name="memo" label="메모" rules={[{ max: 50, message: '글자수 50을 초과할 수 없습니다.' }]}>
           <StyledTextArea />
         </Form.Item>
-        <Form.Item name="joinDate" label="가입일" rules={[{ required: true, message: '가입일을 선택하세요' }]}>
+        <Form.Item name="joinDate" label="가입일" rules={[{ required: true, message: '가입일을 선택하세요.' }]}>
           <StyledDatePicker showNow={false} format="YYYY-MM-DD" disabledDate={disabledDate} />
         </Form.Item>
         <Form.Item name="job" label="직업">
